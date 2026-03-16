@@ -1,6 +1,20 @@
 # TokenRouter Configuration
 # Copy this to config.yaml and fill in your API keys
 
+# === Self-hosted mode (new) ===
+
+# Admin token for management API (required for key management endpoints)
+# Can also be set via TOKENROUTER_ADMIN_TOKEN environment variable
+admin_token: ${TOKENROUTER_ADMIN_TOKEN}
+
+# Database path (optional, default: ~/.tokenrouter/keys.db)
+database: ~/.tokenrouter/keys.db
+
+# Baseline model for savings comparison (default: claude-opus-4)
+baseline_model: claude-opus-4
+
+# === Provider keys ===
+# Also supports legacy single-user mode (direct keys, skips tr-key validation)
 keys:
   openai: ${OPENAI_API_KEY}          # supports environment variables
   anthropic: ${ANTHROPIC_API_KEY}

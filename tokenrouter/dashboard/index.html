@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TokenRouter Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.header{background:#1e293b;border-bottom:1px solid #334155;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:20px;font-weight:600;color:#f8fafc}
+.header h1 span{color:#38bdf8}
+.header .version{color:#64748b;font-size:13px}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px}
+.stat-card .label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .value{font-size:28px;font-weight:700;margin-top:4px}
+.stat-card .value.green{color:#4ade80}
+.stat-card .value.blue{color:#38bdf8}
+.stat-card .value.yellow{color:#fbbf24}
+.stat-card .value.purple{color:#a78bfa}
+.charts{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px}
+.card h3{font-size:14px;color:#94a3b8;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px}
+.logs-table{width:100%;border-collapse:collapse;font-size:13px}
+.logs-table th{text-align:left;padding:8px 12px;color:#94a3b8;border-bottom:1px solid #334155;font-weight:500}
+.logs-table td{padding:8px 12px;border-bottom:1px solid #1e293b}
+.logs-table tr:hover{background:#1e293b}
+.badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge-green{background:#065f4620;color:#4ade80}
+.badge-red{background:#7f1d1d20;color:#f87171}
+.badge-blue{background:#1e3a5f20;color:#38bdf8}
+.keys-section{margin-top:24px}
+.keys-grid{display:grid;gap:12px}
+.key-row{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;display:flex;align-items:center;justify-content:space-between}
+.key-info{flex:1}
+.key-info .name{font-weight:600;font-size:15px}
+.key-info .meta{color:#64748b;font-size:12px;margin-top:4px}
+.key-info .api-key{font-family:monospace;color:#38bdf8;font-size:13px;margin-top:4px}
+.btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:opacity 0.2s}
+.btn:hover{opacity:0.8}
+.btn-primary{background:#2563eb;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-sm{padding:4px 10px;font-size:12px}
+.create-form{display:flex;gap:8px;margin-bottom:16px}
+.create-form input,.create-form select{background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:8px 12px;border-radius:6px;font-size:13px}
+.create-form input{flex:1}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{padding:6px 16px;border-radius:6px;cursor:pointer;font-size:13px;background:#0f172a;color:#94a3b8;border:1px solid #334155}
+.tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.empty{text-align:center;color:#64748b;padding:40px}
+.providers{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.provider-badge{background:#0f172a;border:1px solid #334155;padding:2px 8px;border-radius:4px;font-size:11px;color:#94a3b8}
+canvas{max-height:300px}
+@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1><span>Token</span>Router</h1>
+  <span class="version">Dashboard v0.1.0</span>
+</div>
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" data-tab="keys" onclick="switchTab('keys')">API Keys</div>
+    <div class="tab" data-tab="logs" onclick="switchTab('logs')">Request Logs</div>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="tab-overview">
+    <div class="stats">
+      <div class="stat-card"><div class="label">Total Requests</div><div class="value blue" id="s-requests">-</div></div>
+      <div class="stat-card"><div class="label">Total Cost</div><div class="value yellow" id="s-cost">-</div></div>
+      <div class="stat-card"><div class="label">Total Saved</div><div class="value green" id="s-saved">-</div></div>
+      <div class="stat-card"><div class="label">Savings %</div><div class="value purple" id="s-pct">-</div></div>
+    </div>
+    <div class="charts">
+      <div class="card"><h3>Daily Cost vs Baseline (30 days)</h3><canvas id="costChart"></canvas></div>
+      <div class="card"><h3>Model Distribution</h3><canvas id="modelChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Keys Tab -->
+  <div id="tab-keys" style="display:none">
+    <div class="card keys-section">
+      <h3>API Keys</h3>
+      <div class="create-form">
+        <input type="text" id="key-name" placeholder="Key name (e.g. my-app)">
+        <select id="key-strategy">
+          <option value="balanced">balanced</option>
+          <option value="cheapest">cheapest</option>
+          <option value="best">best</option>
+        </select>
+        <button class="btn btn-primary" onclick="createKey()">Create Key</button>
+      </div>
+      <div class="keys-grid" id="keys-list"></div>
+    </div>
+  </div>
+
+  <!-- Logs Tab -->
+  <div id="tab-logs" style="display:none">
+    <div class="card">
+      <h3>Recent Requests (last 50)</h3>
+      <div style="overflow-x:auto">
+        <table class="logs-table">
+          <thead><tr>
+            <th>Time</th><th>Key</th><th>Requested</th><th>Used</th><th>Task</th>
+            <th>Tokens</th><th>Cost</th><th>Saved</th><th>Latency</th><th>Status</th>
+          </tr></thead>
+          <tbody id="logs-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_TOKEN = localStorage.getItem('tr_admin_token') || prompt('Enter admin token:') || '';
+if(ADMIN_TOKEN) localStorage.setItem('tr_admin_token', ADMIN_TOKEN);
+
+const headers = {'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json'};
+
+let costChart, modelChart;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  ['overview','keys','logs'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+  });
+  if(tab === 'keys') loadKeys();
+  if(tab === 'logs') loadLogs();
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {headers, ...opts});
+  return res.json();
+}
+
+async function loadOverview() {
+  const stats = await api('/v1/dashboard/stats');
+  document.getElementById('s-requests').textContent = stats.total_requests.toLocaleString();
+  document.getElementById('s-cost').textContent = '$' + stats.total_cost.toFixed(4);
+  document.getElementById('s-saved').textContent = '$' + stats.total_saved.toFixed(4);
+  document.getElementById('s-pct').textContent = stats.saved_pct.toFixed(1) + '%';
+
+  const daily = await api('/v1/dashboard/daily');
+  const labels = daily.map(d => d.date);
+  const actual = daily.map(d => d.actual_cost);
+  const baseline = daily.map(d => d.baseline_cost);
+
+  if(costChart) costChart.destroy();
+  costChart = new Chart(document.getElementById('costChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {label: 'Actual Cost', data: actual, borderColor: '#38bdf8', backgroundColor: '#38bdf820', fill: true, tension: 0.3},
+        {label: 'Baseline Cost', data: baseline, borderColor: '#f87171', backgroundColor: '#f8717120', fill: true, tension: 0.3}
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {legend: {labels: {color: '#94a3b8'}}},
+      scales: {
+        x: {ticks: {color: '#64748b'}, grid: {color: '#1e293b'}},
+        y: {ticks: {color: '#64748b', callback: v => '$' + v.toFixed(4)}, grid: {color: '#1e293b'}}
+      }
+    }
+  });
+
+  const dist = await api('/v1/dashboard/models');
+  const colors = ['#38bdf8','#4ade80','#fbbf24','#a78bfa','#f87171','#fb923c','#e879f9','#2dd4bf'];
+  if(modelChart) modelChart.destroy();
+  modelChart = new Chart(document.getElementById('modelChart'), {
+    type: 'doughnut',
+    data: {
+      labels: dist.map(d => d.model),
+      datasets: [{data: dist.map(d => d.count), backgroundColor: colors.slice(0, dist.length)}]
+    },
+    options: {
+      responsive: true,
+      plugins: {legend: {position: 'bottom', labels: {color: '#94a3b8', font: {size: 11}}}}
+    }
+  });
+}
+
+async function loadKeys() {
+  const data = await api('/v1/keys');
+  const list = document.getElementById('keys-list');
+  if(!data.keys || data.keys.length === 0) {
+    list.innerHTML = '<div class="empty">No API keys yet. Create one above.</div>';
+    return;
+  }
+  list.innerHTML = data.keys.map(k => `
+    <div class="key-row">
+      <div class="key-info">
+        <div class="name">${k.name}</div>
+        <div class="api-key">${k.api_key}</div>
+        <div class="meta">Strategy: ${k.strategy} · Created: ${new Date(k.created_at * 1000).toLocaleDateString()}</div>
+        <div class="providers">${Object.entries(k.providers).map(([p,v]) => `<span class="provider-badge">${p}: ${v}</span>`).join('')}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-danger btn-sm" onclick="deleteKey(${k.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function createKey() {
+  const name = document.getElementById('key-name').value.trim();
+  if(!name) return alert('Enter a key name');
+  const strategy = document.getElementById('key-strategy').value;
+  await api('/v1/keys', {method: 'POST', body: JSON.stringify({name, strategy})});
+  document.getElementById('key-name').value = '';
+  loadKeys();
+}
+
+async function deleteKey(id) {
+  if(!confirm('Delete this key?')) return;
+  await api('/v1/keys/' + id, {method: 'DELETE'});
+  loadKeys();
+}
+
+async function loadLogs() {
+  const data = await api('/v1/dashboard/logs');
+  const tbody = document.getElementById('logs-body');
+  if(!data.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">No requests yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(r => `<tr>
+    <td>${new Date(r.timestamp * 1000).toLocaleString()}</td>
+    <td>${r.key_name || '-'}</td>
+    <td>${r.model_requested}</td>
+    <td><span class="badge badge-blue">${r.model_used}</span></td>
+    <td>${r.task_type}</td>
+    <td>${(r.input_tokens + r.output_tokens).toLocaleString()}</td>
+    <td>$${r.actual_cost.toFixed(5)}</td>
+    <td style="color:#4ade80">$${r.saved.toFixed(5)}</td>
+    <td>${r.latency_ms}ms</td>
+    <td><span class="badge ${r.success ? 'badge-green' : 'badge-red'}">${r.success ? 'OK' : 'ERR'}</span></td>
+  </tr>`).join('');
+}
+
+loadOverview();
+</script>
+</body>
+</html>
