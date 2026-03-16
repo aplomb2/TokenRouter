@@ -1,0 +1,31 @@
+# TokenRouter Configuration
+# Copy this to config.yaml and fill in your API keys
+
+keys:
+  openai: ${OPENAI_API_KEY}          # supports environment variables
+  anthropic: ${ANTHROPIC_API_KEY}
+  google: ${GOOGLE_API_KEY}
+  deepseek: ${DEEPSEEK_API_KEY}
+  # moonshot: ${MOONSHOT_API_KEY}    # Kimi / Moonshot
+  # qwen: ${DASHSCOPE_API_KEY}       # Qwen (Alibaba)
+  # zhipu: ${ZHIPU_API_KEY}          # GLM (Zhipu)
+
+# Routing strategy: cheapest | best | balanced
+strategy: balanced
+
+# Optional: custom routing rules (override auto-routing for specific tasks)
+rules:
+  - task: coding
+    model: deepseek-chat           # Force coding tasks to use DeepSeek
+  - task: chinese_language
+    model: qwen-max                # Chinese tasks -> Qwen
+
+# Optional: exclude expensive models
+exclude_models:
+  - claude-opus-4                  # too expensive
+
+# Proxy server settings (for `tokenrouter serve`)
+proxy:
+  host: 0.0.0.0
+  port: 8000
+  cors: true
