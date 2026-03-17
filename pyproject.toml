@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "byok-router"
-version = "0.2.0"
+version = "0.2.1"
 description = "Lightweight AI model intelligent routing SDK — BYOK, auto-select optimal model based on prompt content"
 readme = "README.md"
 license = "MIT"
