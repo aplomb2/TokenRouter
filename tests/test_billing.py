@@ -9,8 +9,6 @@ from tokenrouter.billing import (
     BillingEngine,
     calculate_baseline_cost,
     DailyCost,
-    SavingsReport,
-    UsageSummary,
 )
 from tokenrouter.keys import KeyStore
 
@@ -38,8 +36,21 @@ def key_with_logs(store: KeyStore, billing: BillingEngine):
                (tr_key_id, timestamp, model_requested, model_used, task_type, complexity,
                 input_tokens, output_tokens, actual_cost, baseline_cost, saved, latency_ms, success)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (key.id, now - i * 3600, "auto", "deepseek-chat", "coding", "medium",
-             1000, 500, 0.001, 0.05, 0.049, 200 + i * 10, 1),
+            (
+                key.id,
+                now - i * 3600,
+                "auto",
+                "deepseek-chat",
+                "coding",
+                "medium",
+                1000,
+                500,
+                0.001,
+                0.05,
+                0.049,
+                200 + i * 10,
+                1,
+            ),
         )
     # Add one failed request
     store._conn.execute(
@@ -47,8 +58,7 @@ def key_with_logs(store: KeyStore, billing: BillingEngine):
            (tr_key_id, timestamp, model_requested, model_used, task_type, complexity,
             input_tokens, output_tokens, actual_cost, baseline_cost, saved, latency_ms, success)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (key.id, now - 100, "auto", "gpt-5.2", "coding", "high",
-         2000, 1000, 0.02, 0.12, 0.10, 500, 0),
+        (key.id, now - 100, "auto", "gpt-5.2", "coding", "high", 2000, 1000, 0.02, 0.12, 0.10, 500, 0),
     )
     store._conn.commit()
     return key

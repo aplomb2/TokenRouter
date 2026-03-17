@@ -14,7 +14,6 @@ from tokenrouter.models import (
     ModelConfig,
     get_model,
     select_optimal_model,
-    task_type_to_capability,
 )
 from tokenrouter.types import (
     ComplexityLevel,
@@ -77,40 +76,49 @@ REASONING_PATTERNS = re.compile(
 CODE_LANG_PATTERNS: dict[str, re.Pattern[str]] = {
     "python": re.compile(
         r"\b(python|pip|django|flask|pandas|numpy|pytorch|tensorflow|def\s+\w+|import\s+\w+"
-        r"|\.py\b|f-string|list comprehension|__init__|virtualenv|conda)\b", re.IGNORECASE,
+        r"|\.py\b|f-string|list comprehension|__init__|virtualenv|conda)\b",
+        re.IGNORECASE,
     ),
     "javascript": re.compile(
         r"\b(javascript|js|node\.?js|npm|yarn|react|vue|angular|express|next\.?js|webpack|babel"
-        r"|eslint|const\s+\w+|let\s+\w+|=>|\.jsx?\b|async\/await|promise\.all)\b", re.IGNORECASE,
+        r"|eslint|const\s+\w+|let\s+\w+|=>|\.jsx?\b|async\/await|promise\.all)\b",
+        re.IGNORECASE,
     ),
     "typescript": re.compile(
         r"\b(typescript|ts|\.tsx?\b|interface\s+\w+|type\s+\w+|generic|keyof|typeof|as\s+const"
-        r"|enum\s+\w+)\b", re.IGNORECASE,
+        r"|enum\s+\w+)\b",
+        re.IGNORECASE,
     ),
     "sql": re.compile(
         r"\b(sql|select\s+\w|insert\s+into|update\s+\w+\s+set|delete\s+from|join\s+\w+"
         r"|where\s+\w+|group\s+by|order\s+by|having|index|foreign\s+key|primary\s+key"
-        r"|alter\s+table|create\s+table)\b", re.IGNORECASE,
+        r"|alter\s+table|create\s+table)\b",
+        re.IGNORECASE,
     ),
     "rust": re.compile(
         r"\b(rust|cargo|fn\s+\w+|impl\s+\w+|trait\s+\w+|let\s+mut|Option<|Result<|unwrap"
-        r"|borrow|lifetime|\.rs\b|tokio|async-std)\b", re.IGNORECASE,
+        r"|borrow|lifetime|\.rs\b|tokio|async-std)\b",
+        re.IGNORECASE,
     ),
     "go": re.compile(
         r"\b(golang|go\s+mod|func\s+\w+|goroutine|channel|defer|panic|recover|\.go\b"
-        r"|go\s+run|go\s+build)\b", re.IGNORECASE,
+        r"|go\s+run|go\s+build)\b",
+        re.IGNORECASE,
     ),
     "java": re.compile(
         r"\b(java\b|public\s+class|private\s+\w+|protected\s+\w+|@Override|@Autowired|Spring"
-        r"|Maven|Gradle|\.java\b|JVM|garbage.?collection)\b", re.IGNORECASE,
+        r"|Maven|Gradle|\.java\b|JVM|garbage.?collection)\b",
+        re.IGNORECASE,
     ),
     "cpp": re.compile(
         r"\b(c\+\+|cpp|std::|iostream|vector<|template<|namespace|#include|\.cpp\b|\.hpp\b"
-        r"|malloc|free|pointer|virtual)\b", re.IGNORECASE,
+        r"|malloc|free|pointer|virtual)\b",
+        re.IGNORECASE,
     ),
     "swift": re.compile(
         r"\b(swift|SwiftUI|UIKit|Xcode|\.swift\b|var\s+\w+:\s*\w+|let\s+\w+:\s*\w+"
-        r"|@State|@Binding|protocol\s+\w+|struct\s+\w+:\s*View)\b", re.IGNORECASE,
+        r"|@State|@Binding|protocol\s+\w+|struct\s+\w+:\s*View)\b",
+        re.IGNORECASE,
     ),
 }
 
@@ -157,14 +165,20 @@ DEFAULT_CANDIDATES = ["gpt-5.2", "claude-sonnet-4", "gpt-5-mini"]
 # ========== L2 Classifier ==========
 
 L2_PROMPT = (
-    'Classify this task. Reply with JSON only: '
+    "Classify this task. Reply with JSON only: "
     '{"taskType":"coding|translation|simple_qa|complex_reasoning|creative_writing|math|summarization|chinese_language",'
     '"complexity":"low|medium|high"}\n\nTask: '
 )
 
 VALID_TASK_TYPES = {
-    "coding", "translation", "simple_qa", "complex_reasoning",
-    "creative_writing", "math", "summarization", "chinese_language",
+    "coding",
+    "translation",
+    "simple_qa",
+    "complex_reasoning",
+    "creative_writing",
+    "math",
+    "summarization",
+    "chinese_language",
 }
 VALID_COMPLEXITIES = {"low", "medium", "high"}
 
@@ -186,6 +200,7 @@ def _parse_l2_response(text: str | None) -> tuple[TaskType, ComplexityLevel] | N
 
 # ========== Detection helpers ==========
 
+
 def _detect_language(text: str) -> str | None:
     for lang, pattern in LANGUAGE_PATTERNS.items():
         if pattern.search(text):
@@ -201,6 +216,7 @@ def _detect_code_language(text: str) -> str | None:
 
 
 # ========== L1 Classifier ==========
+
 
 @dataclass
 class ClassificationResult:
@@ -294,7 +310,7 @@ def _classify_task_l1(
     # Find best match
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     best_type, best_score = sorted_scores[0]
-    _, second_score = sorted_scores[1]
+    second_score = sorted_scores[1][1] if len(sorted_scores) >= 2 else 0.0
 
     confidence = min(1.0, best_score)
     task_type: TaskType = best_type  # type: ignore[assignment]
@@ -326,6 +342,7 @@ def _classify_task_l1(
 
 
 # ========== L2 Classifier (async, uses cheap model) ==========
+
 
 async def _classify_with_l2(
     user_message: str,
@@ -396,6 +413,7 @@ async def _classify_with_l2(
 
 
 # ========== Main classification + routing ==========
+
 
 def _select_model_by_strategy(
     candidates: list[str],
@@ -486,8 +504,7 @@ async def classify_async(
             if l2_result:
                 l2_task, l2_complexity = l2_result
                 reasoning = (
-                    f"L2 override: {l2_task}/{l2_complexity} "
-                    f"(L1 was {task_type}/{complexity} conf={confidence:.2f})"
+                    f"L2 override: {l2_task}/{l2_complexity} (L1 was {task_type}/{complexity} conf={confidence:.2f})"
                 )
                 task_type = l2_task
                 complexity = l2_complexity

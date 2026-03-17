@@ -14,16 +14,14 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 except ImportError:
-    raise ImportError(
-        "FastAPI is required for the proxy server. Install with: pip install tokenrouter[proxy]"
-    )
+    raise ImportError("FastAPI is required for the proxy server. Install with: pip install tokenrouter[proxy]")
 
-from tokenrouter import TokenRouter
+from tokenrouter import TokenRouter, __version__
 from tokenrouter.billing import BillingEngine, calculate_baseline_cost
 from tokenrouter.classifier import classify_async
 from tokenrouter.config import TokenRouterConfig
 from tokenrouter.fallback import chat_stream_with_fallback, chat_with_fallback
-from tokenrouter.keys import AsyncKeyStore, KeyStore, TRKey
+from tokenrouter.keys import AsyncKeyStore, TRKey
 from tokenrouter.models import MODEL_REGISTRY, calculate_cost, get_model
 from tokenrouter.types import ChatCompletionRequest, TokenRouterMetadata
 
@@ -70,7 +68,7 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
             billing = BillingEngine(key_store._get_store()._conn)
         return billing
 
-    app = FastAPI(title="TokenRouter Proxy", version="0.1.0")
+    app = FastAPI(title="TokenRouter Proxy", version=__version__)
 
     if cfg.proxy.cors:
         app.add_middleware(
@@ -148,7 +146,9 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
         if not _require_admin(request):
             return JSONResponse({"error": "Unauthorized"}, status_code=401)
         costs = _get_billing().get_global_daily_costs()
-        return JSONResponse([{"date": c.date, "actual_cost": c.actual_cost, "baseline_cost": c.baseline_cost} for c in costs])
+        return JSONResponse(
+            [{"date": c.date, "actual_cost": c.actual_cost, "baseline_cost": c.baseline_cost} for c in costs]
+        )
 
     @app.get("/v1/dashboard/models")
     async def dashboard_models(request: Request) -> JSONResponse:
@@ -168,7 +168,10 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
     async def create_key(request: Request) -> JSONResponse:
         if not _require_admin(request):
             return JSONResponse({"error": "Unauthorized"}, status_code=401)
-        body: dict[str, Any] = await request.json()
+        try:
+            body: dict[str, Any] = await request.json()
+        except (json.JSONDecodeError, ValueError):
+            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
         name = body.get("name", "unnamed")
         strategy = body.get("strategy", "balanced")
         rate_limit = body.get("rate_limit", 0)
@@ -195,7 +198,10 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
     async def add_provider(key_id: int, request: Request) -> JSONResponse:
         if not _require_admin(request):
             return JSONResponse({"error": "Unauthorized"}, status_code=401)
-        body: dict[str, Any] = await request.json()
+        try:
+            body: dict[str, Any] = await request.json()
+        except (json.JSONDecodeError, ValueError):
+            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
         provider = body.get("provider", "")
         api_key = body.get("api_key", "")
         if not provider or not api_key:
@@ -261,7 +267,13 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
                 status_code=401,
             )
 
-        body: dict[str, Any] = await request.json()
+        try:
+            body: dict[str, Any] = await request.json()
+        except (json.JSONDecodeError, ValueError):
+            return JSONResponse(
+                {"error": {"message": "Invalid JSON body", "type": "error", "code": 400}},
+                status_code=400,
+            )
 
         if not body.get("messages"):
             return JSONResponse(
@@ -294,9 +306,7 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
             model_config = get_model(explicit_model)
             if not model_config:
                 # Try by provider_model_id
-                model_config = next(
-                    (m for m in MODEL_REGISTRY if m.provider_model_id == explicit_model), None
-                )
+                model_config = next((m for m in MODEL_REGISTRY if m.provider_model_id == explicit_model), None)
             if not model_config:
                 return JSONResponse(
                     {"error": {"message": f"Model '{explicit_model}' not found.", "type": "error", "code": 400}},
@@ -323,6 +333,7 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
         }
 
         if stream:
+
             async def generate():
                 total_content = ""
                 try:
@@ -461,6 +472,6 @@ def create_app(config_path: str | None = None, config: TokenRouterConfig | None 
 
     @app.get("/health")
     async def health() -> JSONResponse:
-        return JSONResponse({"status": "ok", "version": "0.1.0"})
+        return JSONResponse({"status": "ok", "version": __version__})
 
     return app

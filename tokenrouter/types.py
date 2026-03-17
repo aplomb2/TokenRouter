@@ -7,17 +7,35 @@ from typing import Any, AsyncIterator, Literal, Protocol
 
 RoutingStrategy = Literal["cheapest", "best", "balanced"]
 TaskType = Literal[
-    "coding", "translation", "simple_qa", "complex_reasoning",
-    "creative_writing", "math", "summarization", "chinese_language",
+    "coding",
+    "translation",
+    "simple_qa",
+    "complex_reasoning",
+    "creative_writing",
+    "math",
+    "summarization",
+    "chinese_language",
 ]
 ComplexityLevel = Literal["low", "medium", "high"]
 ProviderType = Literal[
-    "openai", "anthropic", "google",
-    "deepseek", "moonshot", "qwen", "doubao", "zhipu",
+    "openai",
+    "anthropic",
+    "google",
+    "deepseek",
+    "moonshot",
+    "qwen",
+    "doubao",
+    "zhipu",
 ]
 CapabilityKey = Literal[
-    "coding", "reasoning", "translation", "simple_qa",
-    "creative_writing", "math", "summarization", "chinese_language",
+    "coding",
+    "reasoning",
+    "translation",
+    "simple_qa",
+    "creative_writing",
+    "math",
+    "summarization",
+    "chinese_language",
 ]
 
 # --- Messages ---
@@ -30,9 +48,7 @@ def extract_text(content: MessageContent) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, list):
-        return "\n".join(
-            p["text"] for p in content if isinstance(p, dict) and p.get("type") == "text"
-        )
+        return "\n".join(p["text"] for p in content if isinstance(p, dict) and p.get("type") == "text")
     return str(content) if content else ""
 
 
@@ -107,8 +123,7 @@ class ChatCompletionResponse:
             "created": self.created,
             "model": self.model,
             "choices": [
-                {"index": c.index, "message": c.message, "finish_reason": c.finish_reason}
-                for c in self.choices
+                {"index": c.index, "message": c.message, "finish_reason": c.finish_reason} for c in self.choices
             ],
             "usage": {
                 "prompt_tokens": self.usage.prompt_tokens,
@@ -193,9 +208,7 @@ class CustomRule:
 
 
 class ProviderAdapter(Protocol):
-    async def chat(
-        self, request: ChatCompletionRequest, model_id: str
-    ) -> ChatCompletionResponse: ...
+    async def chat(self, request: ChatCompletionRequest, model_id: str) -> ChatCompletionResponse: ...
 
     async def chat_stream(
         self, request: ChatCompletionRequest, model_id: str

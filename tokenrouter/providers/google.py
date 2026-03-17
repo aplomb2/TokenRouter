@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
+from tokenrouter.exceptions import ProviderError
 from tokenrouter.types import (
     ChatCompletionChunk,
     ChatCompletionRequest,
@@ -26,9 +27,7 @@ class GoogleAdapter:
     def _convert_messages(self, request: ChatCompletionRequest) -> tuple[str, list[dict]]:
         """Convert messages to Google Gemini format."""
         system_instruction = "\n".join(
-            extract_text(m.get("content", ""))
-            for m in request.messages
-            if m.get("role") == "system"
+            extract_text(m.get("content", "")) for m in request.messages if m.get("role") == "system"
         )
         contents = [
             {
@@ -64,13 +63,11 @@ class GoogleAdapter:
         async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(url, json=body, headers={"Content-Type": "application/json"})
             if resp.status_code != 200:
-                raise Exception(f"Google API error {resp.status_code}: {resp.text}")
+                raise ProviderError("Google", resp.status_code, resp.text)
 
             data = resp.json()
             candidate = (data.get("candidates") or [{}])[0]
-            text = "".join(
-                p.get("text", "") for p in (candidate.get("content", {}).get("parts") or [])
-            )
+            text = "".join(p.get("text", "") for p in (candidate.get("content", {}).get("parts") or []))
             usage_meta = data.get("usageMetadata", {})
 
             return ChatCompletionResponse(
@@ -87,9 +84,7 @@ class GoogleAdapter:
                 ),
             )
 
-    async def chat_stream(
-        self, request: ChatCompletionRequest, model_id: str
-    ) -> AsyncIterator[ChatCompletionChunk]:
+    async def chat_stream(self, request: ChatCompletionRequest, model_id: str) -> AsyncIterator[ChatCompletionChunk]:
         system_instruction, contents = self._convert_messages(request)
 
         body: dict = {
@@ -107,12 +102,10 @@ class GoogleAdapter:
         created = int(time.time())
 
         async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream(
-                "POST", url, json=body, headers={"Content-Type": "application/json"}
-            ) as resp:
+            async with client.stream("POST", url, json=body, headers={"Content-Type": "application/json"}) as resp:
                 if resp.status_code != 200:
                     body_bytes = await resp.aread()
-                    raise Exception(f"Google API error {resp.status_code}: {body_bytes.decode()}")
+                    raise ProviderError("Google", resp.status_code, body_bytes.decode())
 
                 buffer = ""
                 async for text_chunk in resp.aiter_text():
@@ -126,12 +119,7 @@ class GoogleAdapter:
                             continue
                         try:
                             event = json.loads(trimmed[6:])
-                            text = (
-                                event.get("candidates", [{}])[0]
-                                .get("content", {})
-                                .get("parts", [{}])[0]
-                                .get("text")
-                            )
+                            text = event.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text")
                             if text:
                                 yield ChatCompletionChunk(
                                     id=chunk_id,

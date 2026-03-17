@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Literal
+from dataclasses import dataclass
 
 from tokenrouter.types import (
     CapabilityKey,
@@ -62,7 +61,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=4096,
         strengths=["complex_reasoning", "coding", "math"],
         complexity_range=["high"],
-        capabilities=ModelCapability(coding=5, reasoning=5, translation=4, simple_qa=5, creative_writing=5, math=5, summarization=5, chinese_language=2),
+        capabilities=ModelCapability(
+            coding=5,
+            reasoning=5,
+            translation=4,
+            simple_qa=5,
+            creative_writing=5,
+            math=5,
+            summarization=5,
+            chinese_language=2,
+        ),
     ),
     ModelConfig(
         id="claude-opus-4.5",
@@ -74,7 +82,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["complex_reasoning", "coding", "creative_writing", "math"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=5, reasoning=5, translation=4, simple_qa=5, creative_writing=5, math=5, summarization=5, chinese_language=3),
+        capabilities=ModelCapability(
+            coding=5,
+            reasoning=5,
+            translation=4,
+            simple_qa=5,
+            creative_writing=5,
+            math=5,
+            summarization=5,
+            chinese_language=3,
+        ),
     ),
     ModelConfig(
         id="claude-sonnet-4",
@@ -86,7 +103,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=4096,
         strengths=["coding", "creative_writing", "complex_reasoning"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=4, reasoning=4, translation=5, simple_qa=5, creative_writing=5, math=3, summarization=4, chinese_language=2),
+        capabilities=ModelCapability(
+            coding=4,
+            reasoning=4,
+            translation=5,
+            simple_qa=5,
+            creative_writing=5,
+            math=3,
+            summarization=4,
+            chinese_language=2,
+        ),
     ),
     ModelConfig(
         id="claude-haiku-4.5",
@@ -98,7 +124,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=4096,
         strengths=["simple_qa", "summarization", "translation"],
         complexity_range=["low", "medium"],
-        capabilities=ModelCapability(coding=3, reasoning=3, translation=3, simple_qa=4, creative_writing=3, math=2, summarization=3, chinese_language=1),
+        capabilities=ModelCapability(
+            coding=3,
+            reasoning=3,
+            translation=3,
+            simple_qa=4,
+            creative_writing=3,
+            math=2,
+            summarization=3,
+            chinese_language=1,
+        ),
     ),
     # === OpenAI ===
     ModelConfig(
@@ -111,7 +146,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=16384,
         strengths=["coding", "complex_reasoning", "creative_writing", "math"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=5, reasoning=5, translation=5, simple_qa=5, creative_writing=5, math=5, summarization=5, chinese_language=3),
+        capabilities=ModelCapability(
+            coding=5,
+            reasoning=5,
+            translation=5,
+            simple_qa=5,
+            creative_writing=5,
+            math=5,
+            summarization=5,
+            chinese_language=3,
+        ),
     ),
     ModelConfig(
         id="gpt-5-mini",
@@ -123,7 +167,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["simple_qa", "translation", "summarization", "coding"],
         complexity_range=["low", "medium"],
-        capabilities=ModelCapability(coding=3, reasoning=3, translation=4, simple_qa=4, creative_writing=3, math=3, summarization=4, chinese_language=2),
+        capabilities=ModelCapability(
+            coding=3,
+            reasoning=3,
+            translation=4,
+            simple_qa=4,
+            creative_writing=3,
+            math=3,
+            summarization=4,
+            chinese_language=2,
+        ),
     ),
     # === Google Gemini ===
     ModelConfig(
@@ -136,7 +189,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["simple_qa", "summarization", "coding"],
         complexity_range=["low", "medium"],
-        capabilities=ModelCapability(coding=4, reasoning=3, translation=3, simple_qa=4, creative_writing=3, math=3, summarization=4, chinese_language=2),
+        capabilities=ModelCapability(
+            coding=4,
+            reasoning=3,
+            translation=3,
+            simple_qa=4,
+            creative_writing=3,
+            math=3,
+            summarization=4,
+            chinese_language=2,
+        ),
     ),
     ModelConfig(
         id="gemini-2.5-flash",
@@ -148,7 +210,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["simple_qa", "summarization", "coding"],
         complexity_range=["low", "medium"],
-        capabilities=ModelCapability(coding=3, reasoning=3, translation=3, simple_qa=4, creative_writing=3, math=3, summarization=4, chinese_language=1),
+        capabilities=ModelCapability(
+            coding=3,
+            reasoning=3,
+            translation=3,
+            simple_qa=4,
+            creative_writing=3,
+            math=3,
+            summarization=4,
+            chinese_language=1,
+        ),
     ),
     ModelConfig(
         id="gemini-2.5-pro",
@@ -160,7 +231,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["coding", "complex_reasoning", "math", "summarization"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=4, reasoning=4, translation=3, simple_qa=4, creative_writing=4, math=4, summarization=5, chinese_language=2),
+        capabilities=ModelCapability(
+            coding=4,
+            reasoning=4,
+            translation=3,
+            simple_qa=4,
+            creative_writing=4,
+            math=4,
+            summarization=5,
+            chinese_language=2,
+        ),
     ),
     # === Chinese AI Models ===
     ModelConfig(
@@ -173,7 +253,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["coding", "complex_reasoning", "math"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=4, reasoning=4, translation=3, simple_qa=3, creative_writing=2, math=4, summarization=3, chinese_language=5),
+        capabilities=ModelCapability(
+            coding=4,
+            reasoning=4,
+            translation=3,
+            simple_qa=3,
+            creative_writing=2,
+            math=4,
+            summarization=3,
+            chinese_language=5,
+        ),
     ),
     ModelConfig(
         id="deepseek-reasoner",
@@ -185,7 +274,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["complex_reasoning", "math", "coding"],
         complexity_range=["high"],
-        capabilities=ModelCapability(coding=4, reasoning=5, translation=2, simple_qa=2, creative_writing=1, math=5, summarization=2, chinese_language=5),
+        capabilities=ModelCapability(
+            coding=4,
+            reasoning=5,
+            translation=2,
+            simple_qa=2,
+            creative_writing=1,
+            math=5,
+            summarization=2,
+            chinese_language=5,
+        ),
     ),
     ModelConfig(
         id="kimi-k2.5",
@@ -197,7 +295,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["chinese_language", "coding", "complex_reasoning", "translation"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=4, reasoning=4, translation=4, simple_qa=4, creative_writing=3, math=3, summarization=3, chinese_language=5),
+        capabilities=ModelCapability(
+            coding=4,
+            reasoning=4,
+            translation=4,
+            simple_qa=4,
+            creative_writing=3,
+            math=3,
+            summarization=3,
+            chinese_language=5,
+        ),
     ),
     ModelConfig(
         id="qwen-turbo",
@@ -209,7 +316,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=4096,
         strengths=["chinese_language", "simple_qa", "translation"],
         complexity_range=["low"],
-        capabilities=ModelCapability(coding=1, reasoning=1, translation=2, simple_qa=2, creative_writing=1, math=1, summarization=2, chinese_language=3),
+        capabilities=ModelCapability(
+            coding=1,
+            reasoning=1,
+            translation=2,
+            simple_qa=2,
+            creative_writing=1,
+            math=1,
+            summarization=2,
+            chinese_language=3,
+        ),
     ),
     ModelConfig(
         id="qwen-plus",
@@ -221,7 +337,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=4096,
         strengths=["chinese_language", "coding", "complex_reasoning"],
         complexity_range=["medium"],
-        capabilities=ModelCapability(coding=2, reasoning=2, translation=3, simple_qa=3, creative_writing=2, math=2, summarization=2, chinese_language=4),
+        capabilities=ModelCapability(
+            coding=2,
+            reasoning=2,
+            translation=3,
+            simple_qa=3,
+            creative_writing=2,
+            math=2,
+            summarization=2,
+            chinese_language=4,
+        ),
     ),
     ModelConfig(
         id="qwen-max",
@@ -233,7 +358,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=8192,
         strengths=["chinese_language", "complex_reasoning", "coding", "translation"],
         complexity_range=["medium", "high"],
-        capabilities=ModelCapability(coding=2, reasoning=3, translation=4, simple_qa=4, creative_writing=3, math=2, summarization=3, chinese_language=5),
+        capabilities=ModelCapability(
+            coding=2,
+            reasoning=3,
+            translation=4,
+            simple_qa=4,
+            creative_writing=3,
+            math=2,
+            summarization=3,
+            chinese_language=5,
+        ),
     ),
     ModelConfig(
         id="glm-4-plus",
@@ -245,7 +379,16 @@ MODEL_REGISTRY: list[ModelConfig] = [
         max_tokens=4096,
         strengths=["chinese_language", "simple_qa", "creative_writing"],
         complexity_range=["low", "medium"],
-        capabilities=ModelCapability(coding=2, reasoning=2, translation=2, simple_qa=3, creative_writing=2, math=2, summarization=2, chinese_language=4),
+        capabilities=ModelCapability(
+            coding=2,
+            reasoning=2,
+            translation=2,
+            simple_qa=3,
+            creative_writing=2,
+            math=2,
+            summarization=2,
+            chinese_language=4,
+        ),
     ),
 ]
 
@@ -276,6 +419,7 @@ def _sort_models(models: list[ModelConfig], cap_key: str, strategy: RoutingStrat
         def ratio(m: ModelConfig) -> float:
             cost = m.input_cost_per_1m + m.output_cost_per_1m or 0.01
             return m.capabilities.get(cap_key) / cost
+
         return sorted(models, key=ratio, reverse=True)
 
 

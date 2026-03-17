@@ -4,6 +4,17 @@ from __future__ import annotations
 
 from tokenrouter.types import ProviderAdapter, ProviderType
 
+PROVIDER_KEY_MAP: dict[str, list[str]] = {
+    "openai": ["openai"],
+    "anthropic": ["anthropic"],
+    "google": ["google"],
+    "deepseek": ["deepseek"],
+    "moonshot": ["moonshot"],
+    "qwen": ["qwen", "dashscope"],
+    "doubao": ["doubao"],
+    "zhipu": ["zhipu"],
+}
+
 CHINESE_PROVIDERS: dict[str, dict[str, str]] = {
     "deepseek": {
         "env_key": "DEEPSEEK_API_KEY",
@@ -33,7 +44,7 @@ CHINESE_PROVIDERS: dict[str, dict[str, str]] = {
 }
 
 
-def create_provider(provider: ProviderType, api_key: str) -> ProviderAdapter:  # type: ignore[return]
+def create_provider(provider: ProviderType, api_key: str) -> ProviderAdapter:
     """Create a provider adapter for the given provider type and API key."""
     from tokenrouter.providers.anthropic import AnthropicAdapter
     from tokenrouter.providers.google import GoogleAdapter

@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
+from tokenrouter.exceptions import ProviderError
 from tokenrouter.providers.base import parse_sse_stream
 from tokenrouter.types import (
     ChatCompletionChunk,
@@ -53,12 +54,10 @@ class OpenAIAdapter:
                 json=self._build_body(request, model_id, stream=False),
             )
             if resp.status_code != 200:
-                raise Exception(f"OpenAI API error {resp.status_code}: {resp.text}")
+                raise ProviderError("OpenAI", resp.status_code, resp.text)
             return ChatCompletionResponse.from_dict(resp.json())
 
-    async def chat_stream(
-        self, request: ChatCompletionRequest, model_id: str
-    ) -> AsyncIterator[ChatCompletionChunk]:
+    async def chat_stream(self, request: ChatCompletionRequest, model_id: str) -> AsyncIterator[ChatCompletionChunk]:
         async with httpx.AsyncClient(timeout=120.0) as client:
             async with client.stream(
                 "POST",
@@ -68,6 +67,6 @@ class OpenAIAdapter:
             ) as resp:
                 if resp.status_code != 200:
                     body = await resp.aread()
-                    raise Exception(f"OpenAI API error {resp.status_code}: {body.decode()}")
+                    raise ProviderError("OpenAI", resp.status_code, body.decode())
                 async for data in parse_sse_stream(resp):
                     yield ChatCompletionChunk.from_dict(data)

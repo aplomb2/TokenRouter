@@ -5,8 +5,11 @@ __pycache__/
 dist/
 build/
 .venv/
+venv/
 .env
 *.egg
+*.db
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 config.yaml

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import secrets
 import sqlite3
@@ -153,7 +152,9 @@ class KeyStore:
         ).fetchall()
         keys: list[TRKey] = []
         for row in rows:
-            tr_key = TRKey(id=row[0], name=row[1], api_key=row[2], strategy=row[3], rate_limit=row[4], created_at=row[5])
+            tr_key = TRKey(
+                id=row[0], name=row[1], api_key=row[2], strategy=row[3], rate_limit=row[4], created_at=row[5]
+            )
             tr_key.providers = self._load_providers(tr_key.id)
             keys.append(tr_key)
         return keys
@@ -163,7 +164,9 @@ class KeyStore:
         self._conn.commit()
         return cur.rowcount > 0
 
-    def update_key(self, key_id: int, name: str | None = None, strategy: str | None = None, rate_limit: int | None = None) -> bool:
+    def update_key(
+        self, key_id: int, name: str | None = None, strategy: str | None = None, rate_limit: int | None = None
+    ) -> bool:
         updates: list[str] = []
         params: list[Any] = []
         if name is not None:
@@ -275,9 +278,21 @@ class AsyncKeyStore:
                (tr_key_id, timestamp, model_requested, model_used, task_type, complexity,
                 input_tokens, output_tokens, actual_cost, baseline_cost, saved, latency_ms, success)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (tr_key_id, time.time(), model_requested, model_used, task_type, complexity,
-             input_tokens, output_tokens, actual_cost, baseline_cost, saved, latency_ms,
-             1 if success else 0),
+            (
+                tr_key_id,
+                time.time(),
+                model_requested,
+                model_used,
+                task_type,
+                complexity,
+                input_tokens,
+                output_tokens,
+                actual_cost,
+                baseline_cost,
+                saved,
+                latency_ms,
+                1 if success else 0,
+            ),
         )
         store._conn.commit()
 

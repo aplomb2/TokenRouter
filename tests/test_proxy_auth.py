@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import pytest
 from unittest.mock import AsyncMock, patch
 
@@ -16,6 +15,7 @@ from tokenrouter.types import (
 try:
     from fastapi.testclient import TestClient
     from tokenrouter.proxy import create_app
+
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
@@ -147,11 +147,14 @@ class TestAuthenticatedChat:
         mock_response = ChatCompletionResponse(
             id="test-1",
             model="gpt-5.2",
-            choices=[ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hello!"}, finish_reason="stop")],
+            choices=[
+                ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hello!"}, finish_reason="stop")
+            ],
             usage=Usage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
         )
         from tokenrouter.fallback import FallbackResult
         from tokenrouter.models import get_model
+
         mock_result = FallbackResult(
             response=mock_response,
             model_used=get_model("gpt-5.2"),
@@ -190,11 +193,14 @@ class TestAuthenticatedChat:
         mock_response = ChatCompletionResponse(
             id="test-1",
             model="gpt-5.2",
-            choices=[ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hi"}, finish_reason="stop")],
+            choices=[
+                ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hi"}, finish_reason="stop")
+            ],
             usage=Usage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
         )
         from tokenrouter.fallback import FallbackResult
         from tokenrouter.models import get_model
+
         mock_result = FallbackResult(
             response=mock_response,
             model_used=get_model("gpt-5.2"),

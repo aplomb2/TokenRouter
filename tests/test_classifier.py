@@ -1,7 +1,5 @@
 """Tests for the L1 task classifier."""
 
-import pytest
-
 from tokenrouter.classifier import classify_sync, _classify_task_l1, _detect_language, _detect_code_language
 
 
@@ -66,7 +64,12 @@ class TestL1Classifier:
         assert task_type == "summarization"
 
     def test_reasoning_task(self):
-        messages = [{"role": "user", "content": "Analyze the pros and cons of microservices vs monolith architecture and provide a detailed analysis"}]
+        messages = [
+            {
+                "role": "user",
+                "content": "Analyze the pros and cons of microservices vs monolith architecture and provide a detailed analysis",
+            }
+        ]
         task_type, *_ = _classify_task_l1(messages)
         assert task_type == "complex_reasoning"
 
@@ -134,6 +137,7 @@ class TestClassifySync:
 
     def test_custom_rules(self):
         from tokenrouter.types import CustomRule
+
         messages = [{"role": "user", "content": "Write a Python function"}]
         rules = [CustomRule(task="coding", model="deepseek-chat")]
         result = classify_sync(messages, custom_rules=rules)

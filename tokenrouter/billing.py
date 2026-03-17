@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from tokenrouter.models import MODEL_REGISTRY, ModelConfig, calculate_cost, get_model
+from tokenrouter.models import ModelConfig, calculate_cost, get_model
 
 # Default baseline model for "what would it cost on the premium model"
 DEFAULT_BASELINE_MODEL = "claude-opus-4"
@@ -87,6 +87,7 @@ def _period_to_timestamp(period: str) -> float:
     if period == "today":
         # Start of today (UTC)
         import datetime
+
         today = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         return today.timestamp()
     elif period == "week":

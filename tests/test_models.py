@@ -1,11 +1,7 @@
 """Tests for model registry and selection."""
 
-import pytest
-
 from tokenrouter.models import (
     MODEL_REGISTRY,
-    ModelCapability,
-    ModelConfig,
     calculate_cost,
     get_model,
     select_optimal_model,

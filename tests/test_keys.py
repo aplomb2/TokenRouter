@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-import tempfile
 import pytest
 
 from tokenrouter.keys import KeyStore, AsyncKeyStore, generate_api_key
@@ -127,9 +125,7 @@ class TestKeyStore:
         store.add_provider(key.id, "openai", "sk-test")
         store.delete_key(key.id)
         # Provider should be gone
-        rows = store._conn.execute(
-            "SELECT COUNT(*) FROM provider_keys WHERE tr_key_id = ?", (key.id,)
-        ).fetchone()
+        rows = store._conn.execute("SELECT COUNT(*) FROM provider_keys WHERE tr_key_id = ?", (key.id,)).fetchone()
         assert rows[0] == 0
 
     def test_to_dict_masks_keys(self, store: KeyStore):
@@ -189,7 +185,5 @@ class TestAsyncKeyStore:
         )
         # Verify it was logged
         store = async_store._get_store()
-        row = store._conn.execute(
-            "SELECT COUNT(*) FROM request_logs WHERE tr_key_id = ?", (key.id,)
-        ).fetchone()
+        row = store._conn.execute("SELECT COUNT(*) FROM request_logs WHERE tr_key_id = ?", (key.id,)).fetchone()
         assert row[0] == 1

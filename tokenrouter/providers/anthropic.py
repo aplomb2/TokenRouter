@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator
 
 import httpx
 
+from tokenrouter.exceptions import ProviderError
 from tokenrouter.types import (
     ChatCompletionChunk,
     ChatCompletionRequest,
@@ -38,10 +39,12 @@ class AnthropicAdapter:
             if msg.get("role") == "system":
                 system_text = extract_text(msg.get("content", ""))
             else:
-                messages.append({
-                    "role": msg.get("role", "user"),
-                    "content": extract_text(msg.get("content", "")),
-                })
+                messages.append(
+                    {
+                        "role": msg.get("role", "user"),
+                        "content": extract_text(msg.get("content", "")),
+                    }
+                )
         return system_text, messages
 
     async def chat(self, request: ChatCompletionRequest, model_id: str) -> ChatCompletionResponse:
@@ -68,14 +71,12 @@ class AnthropicAdapter:
                 json=body,
             )
             if resp.status_code != 200:
-                raise Exception(f"Anthropic API error {resp.status_code}: {resp.text}")
+                raise ProviderError("Anthropic", resp.status_code, resp.text)
 
             data = resp.json()
 
             # Convert Anthropic response to OpenAI format
-            content = "".join(
-                c["text"] for c in data.get("content", []) if c.get("type") == "text"
-            )
+            content = "".join(c["text"] for c in data.get("content", []) if c.get("type") == "text")
             usage_data = data.get("usage", {})
             stop_reason = data.get("stop_reason", "end_turn")
 
@@ -97,9 +98,7 @@ class AnthropicAdapter:
                 ),
             )
 
-    async def chat_stream(
-        self, request: ChatCompletionRequest, model_id: str
-    ) -> AsyncIterator[ChatCompletionChunk]:
+    async def chat_stream(self, request: ChatCompletionRequest, model_id: str) -> AsyncIterator[ChatCompletionChunk]:
         system_text, messages = self._convert_messages(request)
 
         body: dict = {
@@ -125,7 +124,7 @@ class AnthropicAdapter:
             ) as resp:
                 if resp.status_code != 200:
                     body_bytes = await resp.aread()
-                    raise Exception(f"Anthropic API error {resp.status_code}: {body_bytes.decode()}")
+                    raise ProviderError("Anthropic", resp.status_code, body_bytes.decode())
 
                 buffer = ""
                 async for text in resp.aiter_text():
@@ -144,22 +143,26 @@ class AnthropicAdapter:
                                     id=chunk_id,
                                     created=created,
                                     model=model_id,
-                                    choices=[{
-                                        "index": 0,
-                                        "delta": {"content": event["delta"]["text"]},
-                                        "finish_reason": None,
-                                    }],
+                                    choices=[
+                                        {
+                                            "index": 0,
+                                            "delta": {"content": event["delta"]["text"]},
+                                            "finish_reason": None,
+                                        }
+                                    ],
                                 )
                             elif event.get("type") == "message_stop":
                                 yield ChatCompletionChunk(
                                     id=chunk_id,
                                     created=created,
                                     model=model_id,
-                                    choices=[{
-                                        "index": 0,
-                                        "delta": {},
-                                        "finish_reason": "stop",
-                                    }],
+                                    choices=[
+                                        {
+                                            "index": 0,
+                                            "delta": {},
+                                            "finish_reason": "stop",
+                                        }
+                                    ],
                                 )
                         except json.JSONDecodeError:
                             pass

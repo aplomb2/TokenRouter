@@ -14,9 +14,11 @@ _ENV_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 
 def _interpolate_env(value: str) -> str:
     """Replace ${VAR_NAME} with environment variable values."""
+
     def replacer(match: re.Match) -> str:
         var_name = match.group(1)
         return os.environ.get(var_name, "")
+
     return _ENV_VAR_PATTERN.sub(replacer, value)
 
 
@@ -88,9 +90,7 @@ class TokenRouterConfig:
         try:
             import yaml
         except ImportError:
-            raise ImportError(
-                "PyYAML is required for YAML config. Install with: pip install tokenrouter[yaml]"
-            )
-        with open(path) as f:
+            raise ImportError("PyYAML is required for YAML config. Install with: pip install tokenrouter[yaml]")
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         return cls.from_dict(data or {})

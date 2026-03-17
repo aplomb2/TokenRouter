@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from tokenrouter.fallback import (
     _is_retryable_error,
     chat_with_fallback,
-    MAX_RETRIES,
 )
 from tokenrouter.models import get_model
 from tokenrouter.types import (
@@ -58,7 +57,9 @@ class TestChatWithFallback:
         mock_response = ChatCompletionResponse(
             id="test-1",
             model="gpt-5.2",
-            choices=[ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hello"}, finish_reason="stop")],
+            choices=[
+                ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hello"}, finish_reason="stop")
+            ],
             usage=Usage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
         )
 
@@ -85,7 +86,9 @@ class TestChatWithFallback:
         mock_response = ChatCompletionResponse(
             id="test-2",
             model="claude-sonnet-4",
-            choices=[ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hi"}, finish_reason="stop")],
+            choices=[
+                ChatCompletionChoice(index=0, message={"role": "assistant", "content": "Hi"}, finish_reason="stop")
+            ],
             usage=Usage(prompt_tokens=10, completion_tokens=5, total_tokens=15),
         )
 

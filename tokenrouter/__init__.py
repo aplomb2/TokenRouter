@@ -12,6 +12,7 @@ from typing import Any
 from tokenrouter.classifier import ClassificationResult, classify_async, classify_sync
 from tokenrouter.config import TokenRouterConfig
 from tokenrouter.fallback import chat_stream_with_fallback, chat_with_fallback
+from tokenrouter.providers import PROVIDER_KEY_MAP
 from tokenrouter.models import MODEL_REGISTRY, ModelConfig, calculate_cost, get_model
 from tokenrouter.types import (
     ChatCompletionChunk,
@@ -22,7 +23,21 @@ from tokenrouter.types import (
     TokenRouterMetadata,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
+
+__all__ = [
+    "TokenRouter",
+    "__version__",
+    "ClassificationResult",
+    "ChatCompletionRequest",
+    "ChatCompletionResponse",
+    "ChatCompletionChunk",
+    "TokenRouterMetadata",
+    "RoutingStrategy",
+    "CustomRule",
+    "TokenRouterConfig",
+    "ModelConfig",
+]
 
 logger = logging.getLogger("tokenrouter")
 
@@ -53,8 +68,7 @@ class TokenRouter:
             self._keys = keys or {}
             self._strategy = strategy
             self._rules = [
-                CustomRule(task=r["task"], model=r["model"]) if isinstance(r, dict) else r
-                for r in (rules or [])
+                CustomRule(task=r["task"], model=r["model"]) if isinstance(r, dict) else r for r in (rules or [])
             ]
             self._exclude_models = exclude_models or []
 
@@ -69,18 +83,7 @@ class TokenRouter:
         """Models available given the configured keys."""
         provider_models = []
         for model in MODEL_REGISTRY:
-            # Check if user has a key for this provider
-            provider_key_map: dict[str, list[str]] = {
-                "openai": ["openai"],
-                "anthropic": ["anthropic"],
-                "google": ["google"],
-                "deepseek": ["deepseek"],
-                "moonshot": ["moonshot"],
-                "qwen": ["qwen", "dashscope"],
-                "doubao": ["doubao"],
-                "zhipu": ["zhipu"],
-            }
-            possible = provider_key_map.get(model.provider, [model.provider])
+            possible = PROVIDER_KEY_MAP.get(model.provider, [model.provider])
             if any(k in self._keys for k in possible):
                 if model.id not in self._exclude_models:
                     provider_models.append(model)
@@ -190,6 +193,7 @@ class TokenRouter:
 
         if loop and loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 return pool.submit(asyncio.run, self.achat(messages, strategy, model)).result()
         return asyncio.run(self.achat(messages, strategy, model))
@@ -201,6 +205,7 @@ class TokenRouter:
         model: str | None = None,
     ) -> Iterator[ChatCompletionChunk]:
         """Synchronous streaming chat — yields chunks."""
+
         async def _collect():
             chunks = []
             async for chunk in self.achat_stream(messages, strategy, model):
@@ -214,6 +219,7 @@ class TokenRouter:
 
         if loop and loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                 chunks = pool.submit(asyncio.run, _collect()).result()
         else:

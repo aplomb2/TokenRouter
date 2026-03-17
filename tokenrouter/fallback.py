@@ -6,13 +6,13 @@ import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 
+from tokenrouter.exceptions import ProviderError
 from tokenrouter.models import ModelConfig, get_model
-from tokenrouter.providers import create_provider
+from tokenrouter.providers import PROVIDER_KEY_MAP, create_provider
 from tokenrouter.types import (
     ChatCompletionChunk,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    ProviderType,
 )
 
 logger = logging.getLogger("tokenrouter.fallback")
@@ -33,24 +33,12 @@ def _is_retryable_error(error: Exception) -> bool:
 
 def _resolve_provider(model_config: ModelConfig, keys: dict[str, str]):
     """Resolve provider adapter using user keys."""
-    # Map provider types to key names
-    provider_key_map: dict[str, list[str]] = {
-        "openai": ["openai"],
-        "anthropic": ["anthropic"],
-        "google": ["google"],
-        "deepseek": ["deepseek"],
-        "moonshot": ["moonshot"],
-        "qwen": ["qwen", "dashscope"],
-        "doubao": ["doubao"],
-        "zhipu": ["zhipu"],
-    }
-
-    possible_names = provider_key_map.get(model_config.provider, [model_config.provider])
+    possible_names = PROVIDER_KEY_MAP.get(model_config.provider, [model_config.provider])
     for name in possible_names:
         if name in keys:
             return create_provider(model_config.provider, keys[name])
 
-    raise Exception(f"No API key for provider {model_config.provider} - not configured")
+    raise ProviderError(model_config.provider, 0, "No API key configured")
 
 
 @dataclass
@@ -92,7 +80,7 @@ async def chat_with_fallback(
             if not _is_retryable_error(err) or i == len(models) - 1:
                 raise
 
-    raise Exception("All models in fallback chain failed")
+    raise ProviderError("fallback", 0, "All models in fallback chain failed")
 
 
 async def chat_stream_with_fallback(
@@ -130,4 +118,4 @@ async def chat_stream_with_fallback(
             if not _is_retryable_error(err) or i == len(models) - 1:
                 raise
 
-    raise Exception("All models in fallback chain failed")
+    raise ProviderError("fallback", 0, "All models in fallback chain failed")
